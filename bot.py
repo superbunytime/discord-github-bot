@@ -1,6 +1,8 @@
 import os
 import discord
+import asyncio
 from github import Github
+from discord.ext import tasks
 
 # Set up your Discord bot
 t = open("token", "r")
@@ -24,34 +26,40 @@ CHANNEL_ID = '775984233369960449' # bot-test server, bot-test channel
 @client.event
 async def on_ready():
     print(f'{client.user.name} has connected to Discord!')
+    github_check.start()
+
+@tasks.loop(seconds = 60)
+async def github_check():
 
     # Get the latest commit hash
     latest_commit = repo.get_commits()[0].sha
 
-    while True:
-        try:
-            # Check for new commits
-            new_commits = repo.get_commits(since=latest_commit)
-            if new_commits:
-                # Send a notification to the Discord channel
-                channel = client.get_channel(CHANNEL_ID)
-                for commit in new_commits:
-                    embed = discord.Embed(
-                        title=f'New Commit in {REPO_NAME}',
-                        description=commit.commit.message,
-                        url=commit.html_url
-                    )
-                    embed.add_field(name='Author', value=commit.commit.author.name)
-                    embed.add_field(name='Commit SHA', value=commit.sha)
-                    await channel.send(embed=embed)
-                latest_commit = new_commits[0].sha
-        except Exception as e:
-            print(f'Error checking for new commits: {e}')
+    try:
+        # Check for new commits
+        new_commits = repo.get_commits(since=latest_commit)
+        if new_commits:
+            # Send a notification to the Discord channel
+            channel = client.get_channel(CHANNEL_ID)
+            for commit in new_commits:
+                embed = discord.Embed(
+                    title=f'New Commit in {REPO_NAME}',
+                    description=commit.commit.message,
+                    url=commit.html_url
+                )
+                embed.add_field(name='Author', value=commit.commit.author.name)
+                embed.add_field(name='Commit SHA', value=commit.sha)
+                await channel.send(embed=embed)
+            latest_commit = new_commits[0].sha
+    except Exception as e:
+        print(f'Error checking for new commits: {e}')
+    
+    print("good excuse for a git commit test")
 
-        # Wait for a minute before checking again
-        await client.wait_for('ready', timeout=60)
 
-client.run(TOKEN)
 
-print("good excuse for a git commit test")
+with open("token", "r+") as keyfile:
+    key = keyfile.read()
+    client.run(key)
+    
+# print("okay that isn't working")
 
