@@ -1,0 +1,7 @@
+discord/
+discord-2.0.0.dist-info/
+discord.py-2.0.1.dist-info/
+__pycache__/
+token
+github_pat
+.venv
