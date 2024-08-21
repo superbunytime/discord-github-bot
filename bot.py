@@ -52,3 +52,6 @@ async def on_ready():
         await client.wait_for('ready', timeout=60)
 
 client.run(TOKEN)
+
+print("good excuse for a git commit test")
+
