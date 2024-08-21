@@ -1,7 +1,7 @@
 import os
 import discord
 import asyncio
-from github import Github
+from github import Github, Auth
 from discord.ext import tasks
 
 # Set up your Discord bot
@@ -31,13 +31,23 @@ async def on_ready():
 @tasks.loop(seconds = 60)
 async def github_check():
 
+    # for repo in g.get_user().get_repos():
+    #   print(repo.name)
+
+    # so the two above lines of code work just fine, 
+    # which leads me to believe that the error exists within the slop below
+
     # Get the latest commit hash
     latest_commit = repo.get_commits()[0].sha
+    # print(latest_commit)
+    # so that prints the latest commit hash,
+    # which is identical to the error message being returned.
 
     try:
         # Check for new commits
         new_commits = repo.get_commits(since=latest_commit)
-        if new_commits:
+        if new_commits != latest_commit:
+            print("new commit detected")
             # Send a notification to the Discord channel
             channel = client.get_channel(CHANNEL_ID)
             for commit in new_commits:
@@ -52,14 +62,8 @@ async def github_check():
             latest_commit = new_commits[0].sha
     except Exception as e:
         print(f'Error checking for new commits: {e}')
-    
-    print("good excuse for a git commit test")
-
 
 
 with open("token", "r+") as keyfile:
     key = keyfile.read()
     client.run(key)
-    
-# print("okay that isn't working")
-
