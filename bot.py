@@ -23,31 +23,26 @@ repo = g.get_repo(f'{REPO_OWNER}/{REPO_NAME}')
 # Specify the Discord channel ID where you want to send the notifications
 CHANNEL_ID = '775984233369960449' # bot-test server, bot-test channel
 
+latest_commit = None
+
+
 @client.event
 async def on_ready():
     print(f'{client.user.name} has connected to Discord!')
+    await update_latest_commit()
     github_check.start()
 
-@tasks.loop(seconds = 60)
-async def github_check():
-
-    # for repo in g.get_user().get_repos():
-    #   print(repo.name)
-
-    # so the two above lines of code work just fine, 
-    # which leads me to believe that the error exists within the slop below
-
-    # Get the latest commit hash
+async def update_latest_commit():
+    global latest_commit
     latest_commit = repo.get_commits()[0].sha
-    # print(latest_commit)
-    # so that prints the latest commit hash,
-    # which is identical to the error message being returned.
 
+@tasks.loop(minutes=1)
+async def github_check():
+    global latest_commit
     try:
         # Check for new commits
         new_commits = repo.get_commits(since=latest_commit)
-        if new_commits != latest_commit:
-            print("new commit detected")
+        if new_commits:
             # Send a notification to the Discord channel
             channel = client.get_channel(CHANNEL_ID)
             for commit in new_commits:
